@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pi Day — Estimate π (WebR)</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="script.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Pi day Activity</h1>
+      <p class="lead">Measure circles, fit a line, and estimate π</p>
+    </header>
+
+    <main class="cards">
+      <section class="card">
+        <h2>Enter measurements</h2>
+        <div class="row">
+          <input id="nameInput" placeholder="Name (e.g., Alice)" />
+          <input id="diamInput" placeholder="Diameter (e.g., 10.2)" />
+          <input id="circInput" placeholder="Circumference (e.g., 32.0)" />
+          <button id="addRowBtn" class="btn">Add</button>
+        </div>
+        
+        
+        <div class="controls">
+          <label>Model:
+            <select id="modelSelect">
+              <option value="1">Fixed effects (lm)</option>
+              <option value="2" disabled title="Random intercept not supported online">Random intercept (not supported online)</option>
+              <option value="3" disabled title="Random slope+intercept not supported online">Random slope+intercept (not supported online)</option>
+            </select>
+          </label>
+          
+          <div class="row format-row">
+            <label>Output format</label>
+            <select id="formatSelect">
+              <option value="png">PNG (raster)</option>
+              <option value="svg">SVG (vector)</option>
+            </select>
+            <small class="hint">SVG is sharper for line art; PNG works everywhere.</small>
+          </div>
+
+
+          <div class="btn-row">
+            <button id="fitBtn" class="primary">Estimate π</button>
+            <button id="clearBtn" class="muted">Clear</button>
+            <button id="downloadCsvBtn" class="muted">Download CSV</button>
+            <button id="downloadPlotBtn" class="muted">Download Plot</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="dataTable">
+            <thead>
+              <tr><th>Name</th><th>Diameter</th><th>Circumference</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        
+      </section>
+
+      <section class="card results">
+        <h2>Results</h2>
+        <div id="piBox" class="big">—</div>
+        <div id="plotWrap"><img id="plotImg" alt="Plot will appear here" /></div>
+        <div id="msg" class="hint"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>WebR version — core logic shared with the local Shiny app. Random-effects models run locally only.</small>
+      &nbsp;·&nbsp;<a href="https://github.com/benshaw2/PiDay" target="_blank">GitHub</a>
+    </footer>
+  </div>
+</body>
+</html>
+
