@@ -170,7 +170,7 @@ fitBtn.onclick = async () => {
     
     
     const outVec = await outR.toJs();
-    console.log("Raw R output:", outVec);
+    //console.log("Raw R output:", outVec);
 
     //const outStr = Array.isArray(outVec) ? outVec[0] : String(outVec);
     const outStr = outVec.values?.[0] ?? "";
@@ -184,7 +184,7 @@ fitBtn.onclick = async () => {
       intercept: parseFloat(interceptStr)
     };
 
-    console.log("Parsed model result:", res);
+    //console.log("Parsed model result:", res);
 
   } catch (e) {
     console.error("Failed to compute model:", e);
@@ -202,49 +202,49 @@ fitBtn.onclick = async () => {
   piBox.textContent = `Estimated π ≈ ${res.slope.toFixed(4)}`;
   msg.textContent = res.message || "";
 
-  // --- Generate plot ---
-  const file = fmt === "svg" ? "plot.svg" : "plot.png";
-  await webR.evalR(`
-    make_pi_plot(df, slope = ${res.slope}, intercept = ${res.intercept},
-                 outfile = "${file}", width = 700, height = 500)
+// --- Generate plot ---
+const file = fmt === "svg" ? "plot.svg" : "plot.png";
+
+if (fmt === "svg") {
+  const svgR = await webR.evalR(`
+    {
+      make_pi_plot(df, slope = ${res.slope}, intercept = ${res.intercept},
+                   outfile = "${file}", width = 700, height = 500)
+      readChar("${file}", nchars = file.info("${file}")$size)
+    }
   `);
 
-  if (fmt === "svg") {
-  
-  const file = "plot.svg";
-const svgR = await webR.evalR(`
-  {
-    make_pi_plot(df, slope = ${res.slope}, intercept = ${res.intercept},
-                 outfile = "${file}", width = 700, height = 500)
-    readChar("${file}", nchars = file.info("${file}")$size)
-  }
-`);
+  const svgTxt = await svgR.toJs();
+  plotImg.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgTxt.values[0])))}`;
+} else {
+  try {
+    const result = await webR.captureR(`
+      make_pi_plot(df, slope = ${res.slope}, intercept = ${res.intercept},
+                   outfile = "${file}", width = 700, height = 500)
+      if (file.exists("${file}")) {
+        img_data <- readBin("${file}", "raw", file.info("${file}")$size)
+      } else {
+        img_data <- raw(0)
+      }
+      img_data
+    `);
 
-const svgTxt = await svgR.toJs();
-plotImg.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgTxt.values[0])))}`;
-  
-    //const svgR = await webR.evalR(`readChar("${file}", nchars=file.info("${file}")$size)`);
-    //const svgTxt = await svgR.toJs();
-    //plotImg.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgTxt)))}`;
-  } else {
-  
-  const file = "plot.png";
-const bin = await webR.evalRRaw(`
-  {
-    make_pi_plot(df, slope = ${res.slope}, intercept = ${res.intercept},
-                 outfile = "${file}", width = 700, height = 500)
-    readBin("${file}", "raw", file.info("${file}")$size)
-  }
-`);
+    const bytes = await result.result.toJs();
+    //console.log("Raw PNG bytes:", bytes);
 
-const bytes = await bin.toJs();
-plotImg.src = `data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`;
-  
-    //const bin = await webR.evalRRaw(`readBin("${file}", "raw", file.info("${file}")$size)`);
-    ////const bin = await webR.evalRRaw(`(readBin("${file}", "raw", file.info("${file}")$size))`);
-    //const bytes = await bin.toJs();
-    //plotImg.src = `data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`;
+    if (!bytes || bytes.length === 0) {
+      console.error("PNG file exists but returned empty or invalid raw vector.");
+      plotImg.alt = "Plot failed to render.";
+    } else {
+      const binaryString = String.fromCharCode(...bytes);
+      const base64 = btoa(binaryString);
+      plotImg.src = `data:image/png;base64,${base64}`;
+    }
+  } catch (e) {
+    console.error("Error rendering PNG plot:", e);
+    plotImg.alt = "Plot failed to render.";
   }
+}
 };
 
 
